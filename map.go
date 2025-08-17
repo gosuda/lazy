@@ -1,34 +1,30 @@
 package lazy
 
-// Map applies the mapper function to each value in the stream and returns a new stream.
-//
-//	Options:
-//	- WithContext(context.Context): set the context for cancellation. When the context is done, the stream will be closed immediately.
-//	- WithSize(int): the size of the new stream created by this function. Will prepare some items in advance. (default: 0)
-//	- WithErrorHandler(func(error)): specify how to handle errors. If the error handler returns DecisionStop, the stream will be closed immediately. (default: IgnoreErrorHandler)
-func Map[IN any, OUT any](obj stream[IN], mapper func(v IN) (OUT, error), opts ...optionFunc) stream[OUT] {
-	opt := buildOpts(opts)
-	ch := make(chan OUT, opt.size)
-	ctx := opt.ctx
+type mapFunc[IN, OUT any] func(v IN) (OUT, error)
 
-	go func() {
-		defer recover()
-		defer close(ch)
-		for v := range obj.ch {
-			result, err := mapper(v)
-			if err != nil {
-				if decision := opt.onError(err); decision == DecisionStop {
+func Map[IN any, OUT any](stream reader[IN], mapper mapFunc[IN, OUT], opts ...optionFunc) reader[OUT] {
+	r, w := New[OUT](opts...)
+	opt := buildOpts(opts)
+
+	for i := 0; i < opt.parallel; i++ {
+		go func() {
+			defer w.Close()
+			for v := range stream.ch {
+				result, err := mapper(v)
+				if err != nil {
+					if opt.onError(err) == DecisionStop {
+						stream.Close(err)
+						return
+					} else {
+						continue
+					}
+				}
+				if err := w.Emit(result); err != nil {
+					stream.Close(err)
 					return
 				}
-				continue
 			}
-			select {
-			case <-ctx.Done():
-				return
-			case ch <- result:
-			}
-		}
-	}()
-
-	return New(ch)
+		}()
+	}
+	return r
 }

@@ -3,18 +3,20 @@ package lazy
 import "context"
 
 type option struct {
-	ctx     context.Context
-	size    int
-	onError errHandlerFunc
+	ctx      context.Context
+	size     int
+	parallel int
+	onError  errHandlerFunc
 }
 
 type optionFunc func(opts *option)
 
 func buildOpts(opts []optionFunc) option {
 	opt := option{
-		ctx:     context.Background(),
-		size:    0,
-		onError: IgnoreErrorHandler,
+		ctx:      context.Background(),
+		size:     0,
+		parallel: 1,
+		onError:  IgnoreErrorHandler,
 	}
 	for _, f := range opts {
 		f(&opt)
@@ -52,5 +54,11 @@ var (
 func WithErrHandler(handler errHandlerFunc) optionFunc {
 	return func(opts *option) {
 		opts.onError = handler
+	}
+}
+
+func WithParallelism(parallel int) optionFunc {
+	return func(opts *option) {
+		opts.parallel = parallel
 	}
 }
