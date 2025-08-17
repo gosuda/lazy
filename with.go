@@ -1,9 +1,15 @@
 package lazy
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"runtime"
+)
 
 type option struct {
-	ctx      context.Context
+	ctx      *Context
+	fname    string
+	name     string
 	size     int
 	parallel int
 	onError  errHandlerFunc
@@ -13,7 +19,9 @@ type optionFunc func(opts *option)
 
 func buildOpts(opts []optionFunc) option {
 	opt := option{
-		ctx:      context.Background(),
+		ctx:      &Context{Context: context.Background()},
+		fname:    "",
+		name:     "",
 		size:     0,
 		parallel: 1,
 		onError:  IgnoreErrorHandler,
@@ -21,7 +29,30 @@ func buildOpts(opts []optionFunc) option {
 	for _, f := range opts {
 		f(&opt)
 	}
+	if opt.name == "" {
+		pc, _, line, _ := runtime.Caller(2)
+		f := runtime.FuncForPC(pc)
+		opt.name = fmt.Sprintf("%s:%d", f.Name(), line)
+	}
+
+	if opt.fname == "" {
+		opt.fname = "New"
+	}
+
+	opt.name = fmt.Sprintf("%s(%s)", opt.fname, opt.name)
 	return opt
+}
+
+func withFname(fname string) optionFunc {
+	return func(opts *option) {
+		opts.fname = fname
+	}
+}
+
+func WithName(name string) optionFunc {
+	return func(opts *option) {
+		opts.name = name
+	}
 }
 
 func WithSize(size int) optionFunc {
@@ -32,7 +63,7 @@ func WithSize(size int) optionFunc {
 
 func WithContext(ctx context.Context) optionFunc {
 	return func(opts *option) {
-		opts.ctx = ctx
+		opts.ctx = &Context{Context: ctx}
 	}
 }
 

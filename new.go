@@ -41,6 +41,7 @@ func New[T any](opts ...optionFunc) (reader[T], writer[T]) {
 //	// set the context for cancellation. When the context is done, the stream will be closed immediately.
 //	WithContext(context.Context) // default: context.Background()
 func NewSlice[T any](slice []T, opts ...optionFunc) reader[T] {
+	opts = append(opts, withFname("NewSlice"))
 	r, w := New[T](opts...)
 
 	go func() {
