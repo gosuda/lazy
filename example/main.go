@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
-	nums, w := lazy.New[int]()
+	nums, w := lazy.New[int](
+		lazy.WithContext(context.Background()),
+	)
 	go func() {
 		cnt := 0
 		for {
