@@ -1,13 +1,13 @@
 package lazy
 
 import (
-	"context"
+	stdContext "context"
 	"fmt"
 	"runtime"
 )
 
 type option struct {
-	ctx      *Context
+	ctx      *context
 	fname    string
 	name     string
 	size     int
@@ -19,7 +19,7 @@ type optionFunc func(opts *option)
 
 func buildOpts(opts []optionFunc) option {
 	opt := option{
-		ctx:      &Context{Context: context.Background()},
+		ctx:      &context{Context: stdContext.Background()},
 		fname:    "",
 		name:     "",
 		size:     0,
@@ -61,9 +61,9 @@ func WithSize(size int) optionFunc {
 	}
 }
 
-func WithContext(ctx context.Context) optionFunc {
+func WithContext(ctx stdContext.Context) optionFunc {
 	return func(opts *option) {
-		opts.ctx = &Context{Context: ctx}
+		opts.ctx = &context{Context: ctx}
 	}
 }
 

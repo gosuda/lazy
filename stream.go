@@ -8,7 +8,7 @@ import (
 type reader[T any] struct {
 	ch        <-chan T
 	propagate func(err error)
-	ctx       *Context
+	ctx       Context
 }
 
 func (r *reader[T]) Close(reason error) {
@@ -20,7 +20,7 @@ type writer[T any] struct {
 
 	// reason is the error that caused the stream to be closed.
 	reason *atomic.Pointer[error]
-	ctx    *Context
+	ctx    Context
 }
 
 func (e *writer[T]) Emit(v T) (err error) {

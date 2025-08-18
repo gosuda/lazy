@@ -24,16 +24,16 @@ func main() {
 		}
 	}()
 
-	evenNums := lazy.Filter(nums, func(ctx *lazy.Context, v int) (bool, error) {
+	evenNums := lazy.Filter(nums, func(ctx lazy.Context, v int) (bool, error) {
 		return v%2 == 0, nil
 	})
 
-	formattedNums := lazy.Map(evenNums, func(ctx *lazy.Context, v int) (string, error) {
+	formattedNums := lazy.Map(evenNums, func(ctx lazy.Context, v int) (string, error) {
 		time.Sleep(1 * time.Second)
 		return fmt.Sprintf("%03d", v), nil
 	}, lazy.WithSize(1), lazy.WithParallelism(5))
 
-	summedEverySec := lazy.MapMany(formattedNums, func(ctx *lazy.Context, ch <-chan string, yield func(int) error) error {
+	summedEverySec := lazy.MapMany(formattedNums, func(ctx lazy.Context, ch <-chan string, yield func(int) error) error {
 		sum := 0
 		last := time.Now()
 		for v := range ch {
@@ -53,7 +53,7 @@ func main() {
 		return nil
 	})
 
-	if err := lazy.Consume(summedEverySec, func(ctx *lazy.Context, v int) error {
+	if err := lazy.Consume(summedEverySec, func(ctx lazy.Context, v int) error {
 		fmt.Println(v)
 		return nil
 	}); err != nil {

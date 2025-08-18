@@ -1,6 +1,6 @@
 package lazy
 
-type mapFunc[IN, OUT any] func(ctx *Context, v IN) (OUT, error)
+type mapFunc[IN, OUT any] func(ctx Context, v IN) (OUT, error)
 
 func Map[IN any, OUT any](stream reader[IN], mapper mapFunc[IN, OUT], opts ...optionFunc) reader[OUT] {
 	opts = append(opts, withFname("Map"))
@@ -10,7 +10,7 @@ func Map[IN any, OUT any](stream reader[IN], mapper mapFunc[IN, OUT], opts ...op
 	for i := 0; i < opt.parallel; i++ {
 		go func() {
 			defer w.Close()
-			ctx := &Context{Context: opt.ctx, name: opt.name, workerIdx: i}
+			ctx := &context{Context: opt.ctx, name: opt.name, workerIdx: i}
 			for v := range stream.ch {
 				result, err := mapper(ctx, v)
 				if err != nil {
